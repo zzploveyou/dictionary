@@ -1,0 +1,6 @@
+/database/*
+/audio/*
+/lib/sentence.log
+*.pyc
+!/database/.nothing
+!/audio/.nothing
