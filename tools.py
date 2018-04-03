@@ -44,7 +44,7 @@ def get_meanings_from_file(database, filename, tofile):
     bar = progressbar.ProgressBar()
     fw = open(tofile, 'a')
     for word in bar(words_list):
-        results_static, tag_in = get_meaning(word, mdb)
+        results_static = get_meaning(word, mdb)[0]
         meanings = [i for i in results_static if not i.startswith("http:")]
         if meanings != []:
             fw.write("#" * 45 + "\n")
@@ -184,7 +184,11 @@ def merge(database):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-d", "--database", type=str, default=DATABASE, help="specifty sqlite3 database name.")
+        "-d",
+        "--database",
+        type=str,
+        default=DATABASE,
+        help="specifty sqlite3 database name.")
     group = parser.add_argument_group("database")
     group.add_argument(
         "--pop", action='store_true', help="pop null item from '--database'.")

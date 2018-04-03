@@ -145,7 +145,7 @@ class Jscb:
             for l in self.dic[word].split("\n"):
                 print("  {:<}".format(l))
             print('\033[0m')
-    
+
     def sound(self, word):
         """play sound."""
         if self.nosound == 1:
@@ -239,10 +239,6 @@ class Jscb:
         if tag_in is True:
             """Already in local db."""
             print("[Local]")
-        audio_path = os.path.join(self.path, audio_dir)
-        num = 1
-        dd = {1: "英", 2: "美", 3: "未知"}
-
         fayin, meanings = [], []
         if results_static != []:
             for item in results_static:
@@ -257,7 +253,9 @@ class Jscb:
             res += "  └── {}\n".format(meanings[-1])
         for tag, url in zip(["英", "美"], fayin):
             try:
-                urlretrieve(url, os.path.join(self.path, audio_path, "{}-{}.mp3".format(word, tag)))
+                urlretrieve(url,
+                            os.path.join(self.path, audio_dir,
+                                         "{}-{}.mp3".format(word, tag)))
             except Exception as e:
                 print(e)
         print(res)

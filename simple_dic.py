@@ -11,6 +11,7 @@ try:
 except Exception as e:
     pass
 
+
 def play_audio(urls):
     """play audio mp3."""
     for url in urls:
@@ -65,7 +66,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description="quick query word from sqlite3 db.")
     parser.add_argument(
-        '-d', '--database', type=str, default=os.path.join(os.path.dirname(__file__), "dic.db"), help="specify database name.")
+        '-d',
+        '--database',
+        type=str,
+        default=os.path.join(os.path.dirname(__file__), "dic.db"),
+        help="specify database name.")
     parser.add_argument('-w', '--word', type=str, help="specify word.")
     args = parser.parse_args()
     if args.database is None or args.word is None:

@@ -277,7 +277,6 @@ class Review:
         if not self.nosound:
             play_mp3(self.path, word, show_tag=False)
 
-
     def review(self):
         """复习单词主函数"""
         # 设置信号中断
