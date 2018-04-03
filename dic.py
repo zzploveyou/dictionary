@@ -5,8 +5,7 @@ usage : quick dictionary in ubuntu.
 import argparse
 import os
 import sys
-import threading
-import urllib.request
+from urllib.request import urlretrieve
 import sqlite3
 
 from lib.sqlite import MeanSqlite, SenSqlite
@@ -46,12 +45,6 @@ def parse():
         help='default database name is "default", \
                         Review database in current dir if txt in database,\
                         Review database in database_dir if not')
-    parser.add_argument(
-        '-f',
-        '--fromfile',
-        type=str,
-        help='get translations from file if specifed,\
-                         please input realpath')
     parser.add_argument('--db', type=str, help='specify database name')
     parser.add_argument(
         '-u',
@@ -77,7 +70,6 @@ class Jscb:
         self.expert = args.expert
         self.sentence = args.sentence
         self.word = args.word
-        self.fromfile = args.fromfile
         self.url = args.url
         if args.db is not None:
             self.db = os.path.join(self.path, database_dir, args.db)
@@ -226,59 +218,9 @@ class Jscb:
         self.conn.commit()
         self.conn.close()
 
-    def getall_fromfile(self):
-        words_list = set()
-        dic = parse_dic(self.fromfile)
-        for i in dic:
-            words_list.add(i)
-        if words_list == set():
-            with open(self.fromfile) as f:
-                for line in f:
-                    words_list.add(line.strip())
-
-        # meaning table
-        words_list -= self.mdb.wordlist()
-        words_list -= self.base_mdb.wordlist()
-        import progressbar
-        bar = progressbar.ProgressBar()
-        num = 0
-        bar_list = bar(words_list)
-        for word in bar_list:
-            num += 1
-            if num % 50 == 0:
-                self.conn.commit()
-            results_static, tag_in = get_meaning(word, self.mdb)
-            # write to note txt file and download mp3.
-            # self.translate_from_jscb(word, results_static)
-
-        # sentence table
-        words_list -= self.sdb.wordlist()
-        words_list -= self.base_sdb.wordlist()
-        import progressbar
-        bar = progressbar.ProgressBar()
-        num = 0
-        bar_list = bar(words_list)
-        for word in bar_list:
-            num += 1
-            if num % 50 == 0:
-                self.conn.commit()
-            if self.wdriver is None:
-                self.wdriver = Webdriver()
-            res_dic = get_sentence_from_source_page(
-                self.wdriver.source_page(word), word)
-            self.sdb.add(word, res_dic)
-
-        # commit
-        self.conn.commit()
-        self.conn.close()
-
     def translate(self):
         """查单词主函数"""
         self.get_words_already()
-        # 从文件导入需要查询的单词
-        if self.fromfile:
-            self.getall_fromfile()
-            sys.exit(0)
         while True:
             word = self.prepare()
             # several parts.
@@ -291,6 +233,7 @@ class Jscb:
     def translate_from_jscb(self, word, results_static=None):
         """获取单词在金山词霸上的释义，并格式化输出到屏幕，词库"""
         # 把需要的东西先抓下来
+        tag_in = False
         if results_static is None:
             results_static, tag_in = get_meaning(word, self.mdb)
         if tag_in is True:
@@ -299,52 +242,32 @@ class Jscb:
         audio_path = os.path.join(self.path, audio_dir)
         num = 1
         dd = {1: "英", 2: "美", 3: "未知"}
-        lines = ["#" * 45 + "\n", "#" + word + "\n"]
 
+        fayin, meanings = [], []
         if results_static != []:
-            fayin = []
-            for idx, i in enumerate(results_static):
-                if "http" in i and "mp3" in i:
-                    fayin.append(i)
-                # 先打印音标与释义
+            for item in results_static:
+                if item.startswith("http:"):
+                    fayin.append(item)
                 else:
-                    if (idx + 1) != len(results_static):
-                        if not self.fromfile:
-                            print('  ├── %s' % (i))
-                        lines.append('├── ' + i + "\n")
-                    else:
-                        if not self.fromfile:
-                            print('  └── %s' % (i))
-                        lines.append('└── ' + i + "\n")
-            print('\033[0m')
-            filenames = []
-            for i in fayin:
-                # 再进入发音模块
-                filename_to = os.path.join(audio_path,
-                                           word + "-" + dd[num] + ".mp3")
-                num += 1
-                # 下载音频文件
-                if not os.path.exists(filename_to) or \
-                        os.path.getsize(filename_to) == 0:
-                    try:
-                        urllib.request.urlretrieve(i, filename_to)
-                    except Exception:
-                        pass
-
-            if filenames != []:
-                print(
-                    "\r %s" %
-                    (" " *
-                     (len("now playing: ") + max([len(fn)
-                                                  for fn in filenames]))))
-            else:
-                print("\r %s" % (" " * 50))
-
-        fw = open(self.notefile, 'a')
-        if word not in self.words_already and len(lines) != 2:
+                    meanings.append(item)
+        res = ""
+        if meanings != []:
+            for idx in range(len(meanings) - 1):
+                res += "  ├── {}\n".format(meanings[idx])
+            res += "  └── {}\n".format(meanings[-1])
+        for tag, url in zip(["英", "美"], fayin):
+            try:
+                urlretrieve(url, os.path.join(self.path, audio_path, "{}-{}.mp3".format(word, tag)))
+            except Exception as e:
+                print(e)
+        print(res)
+        print("\033[0m")
+        if word not in self.words_already and meanings != []:
+            with open(self.notefile, 'a') as f:
+                f.write("#" * 45 + "\n")
+                f.write("#" + word + "\n")
+                f.write(res)
             self.words_already.append(word)
-            fw.writelines(lines)
-        fw.close()
 
     def main(self):
         if self.word:
