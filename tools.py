@@ -11,10 +11,13 @@ Examples
 ------------------------------------------
 """
 from urllib.request import urlretrieve
+from urllib.error import HTTPError
 import sqlite3
 from glob import glob
 import os
 import sys
+import progressbar
+from time import sleep
 from lib.pre import audio_dir
 
 PATH = os.path.dirname(__file__)
@@ -33,6 +36,7 @@ def download(database):
     """download mp3 from urls in sqlite db."""
     conn = sqlite3.connect(database)
     cursor = conn.cursor()
+    bar = progressbar.ProgressBar()
 
     def m1(word):
         return os.path.join(PATH, audio_dir, "{}-英.mp3".format(word))
@@ -41,17 +45,22 @@ def download(database):
         return os.path.join(PATH, audio_dir, "{}-美.mp3".format(word))
 
     mean = cursor.execute("select * from MEANING").fetchall()
-    for word, rec in mean:
+    for word, rec in bar(mean):
         tag = 0
         for item in rec.split("\n"):
             if item.startswith("http:"):
-                if tag == 0:
-                    if not os.path.exists(m1(word)):
-                        urlretrieve(item, m1(word))
-                    tag = 1
-                else:
-                    if not os.path.exists(m2(word)):
-                        urlretrieve(item, m2(word))
+                try:
+                    if tag == 0:
+                        if not os.path.exists(m1(word)):
+                            urlretrieve(item, m1(word))
+                        tag = 1
+                    else:
+                        if not os.path.exists(m2(word)):
+                            urlretrieve(item, m2(word))
+                except FileNotFoundError:
+                    pass
+                except HTTPError:
+                    sleep(10)
 
 
 def size(cursor, head=""):
