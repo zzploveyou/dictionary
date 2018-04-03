@@ -136,12 +136,11 @@ class Jscb:
         if word not in self.dic:
             # 不在词库中或指定强制重新查询，则联网获取释义，发音
             try:
-                self.translate_from_jscb(word)
+                self.retrieve_meaning(word)
             except IOError as e:
                 print("IOError:", e)
                 sys.exit(byebye)
         else:
-            # 在词库中，获取并发音
             for l in self.dic[word].split("\n"):
                 print("  {:<}".format(l))
             print('\033[0m')
@@ -230,7 +229,7 @@ class Jscb:
             self.sound(word)
             self.next_or_stop()
 
-    def translate_from_jscb(self, word, results_static=None):
+    def retrieve_meaning(self, word, results_static=None):
         """获取单词在金山词霸上的释义，并格式化输出到屏幕，词库"""
         # 把需要的东西先抓下来
         tag_in = False
