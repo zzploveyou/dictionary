@@ -8,6 +8,7 @@ Examples
 3. merge sqlite db.
 4. pop null item from sqlite db.
 5. get information of size of sqlite db.
+6. retrieve word meanings from sqlite db.
 ------------------------------------------
 """
 from urllib.request import urlretrieve
@@ -15,12 +16,44 @@ from urllib.error import HTTPError
 import sqlite3
 from glob import glob
 import os
-import sys
+import argparse
 import progressbar
 from time import sleep
-from lib.pre import audio_dir
+from lib.pre import audio_dir, database_dir
+from lib.parser import parse_dic
+from lib.jscb import get_meaning
+from lib.sqlite import MeanSqlite
 
 PATH = os.path.dirname(__file__)
+DATABASE = os.path.join(PATH, database_dir, "dic.db")
+
+
+def get_meanings_from_file(database, filename, tofile):
+    conn = sqlite3.connect(database)
+    mdb = MeanSqlite(conn)
+    # read words list
+    words_list = set()
+    dic = parse_dic(filename)
+    for i in dic:
+        words_list.add(i)
+    if words_list == set():
+        with open(filename) as f:
+            for line in f:
+                words_list.add(line.strip())
+    # write to tofile.
+    bar = progressbar.ProgressBar()
+    fw = open(tofile, 'a')
+    for word in bar(words_list):
+        results_static, tag_in = get_meaning(word, mdb)
+        meanings = [i for i in results_static if not i.startswith("http:")]
+        if meanings != []:
+            fw.write("#" * 45 + "\n")
+            fw.write("#" + word + "\n")
+            for idx in range(len(meanings) - 1):
+                fw.write("├── {}\n".format(meanings[idx]))
+            fw.write("└── {}\n".format(meanings[-1]))
+    conn.commit()
+    conn.close()
 
 
 def deletenull():
@@ -57,10 +90,10 @@ def download(database):
                     else:
                         if not os.path.exists(m2(word)):
                             urlretrieve(item, m2(word))
-                except FileNotFoundError:
-                    pass
                 except HTTPError:
                     sleep(10)
+                except Exception:
+                    pass
 
 
 def size(cursor, head=""):
@@ -149,40 +182,55 @@ def merge(database):
 
 
 if __name__ == '__main__':
-    import argparse
-    parser = argparse.ArgumentParser(
-        description='''merge other database to a specified database,\n
-        or pop null item from database.''')
+    parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-d', '--database', type=str, help='specify database name.')
-    parser.add_argument(
-        '--pop', action='store_true', help='pop null item from "--database".')
-    parser.add_argument(
-        '--info', action='store_true', help='show info of "--database".')
-    parser.add_argument(
-        '--merge',
+        "-d", "--database", type=str, default=DATABASE, help="specifty sqlite3 database name.")
+    group = parser.add_argument_group("database")
+    group.add_argument(
+        "--pop", action='store_true', help="pop null item from '--database'.")
+    group.add_argument(
+        "--merge",
         action='store_true',
-        help='merge other database into "--database".')
-    parser.add_argument(
-        '--deleteEmptyAudio',
+        help="merge other db to the '--database'.")
+    group.add_argument(
+        "--info",
         action='store_true',
-        help="delete empty audio file.")
-    parser.add_argument(
-        '--downloadAudio',
+        help="get size information of the '--database'.")
+    group2 = parser.add_argument_group("audio")
+    group2.add_argument(
+        "--denull", action='store_true', help="delete null size mp3 file.")
+    group2.add_argument(
+        "--download_all_mp3",
         action='store_true',
-        help="download audio file according to urls in sqlite db.")
+        help="download all mp3 file from urls in '--database'.")
+    group3 = parser.add_argument_group("retrieve words")
+    group3.add_argument(
+        "-i",
+        "--input",
+        dest="inputfile",
+        help="input text file, each line is a word.")
+    group3.add_argument(
+        "-o",
+        "--output",
+        dest="outputfile",
+        help="output text file, contains meanings of words in inputlist.")
     args = parser.parse_args()
-    if args.deleteEmptyAudio:
-        deletenull()
-        sys.exit(0)
-    if args.database is None:
-        print("Usage: python {} -h".format(__file__))
-        sys.exit(1)
-    if args.downloadAudio:
-        download(args.database)
-    if args.info:
-        info(args.database)
-    if args.merge:
-        merge(args.database)
-    if args.pop:
+    # print(vars(args))
+    if args.pop \
+            and args.database is not None:
         pop(args.database)
+    if args.merge \
+            and args.database is not None:
+        merge(args.database)
+    if args.info \
+            and args.database is not None:
+        info(args.database)
+    if args.denull:
+        deletenull()
+    if args.download_all_mp3 \
+            and args.database is not None:
+        download(args.database)
+    if args.inputfile is not None \
+            and args.outputfile is not None \
+            and args.database is not None:
+        get_meanings_from_file(args.database, args.inputfile, args.outputfile)
