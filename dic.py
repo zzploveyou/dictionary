@@ -153,11 +153,14 @@ class Jscb:
             for l in self.dic[word].split("\n"):
                 print("  {:<}".format(l))
             print('\033[0m')
+    
+    def sound(self, word):
+        """play sound."""
         if self.nosound == 1:
             play_mp3(
                 self.path,
                 word,
-                show_tag=True,
+                show_tag=False,
                 only_American_pronunciation=True)
 
     def sentences(self, word):
@@ -186,6 +189,9 @@ class Jscb:
                 try_time -= 1
             if not success:
                 print("[*] cannot get sentences of this word.\033[0m")
+
+    def urls(self, word):
+        """print urls of other dic."""
         if self.url:
             other_dic_urls(word)
 
@@ -210,15 +216,13 @@ class Jscb:
         print("\n{:s}".format(word))
         if word in self.words_already:
             print("[existed]")
-        th = []
-        th.append(threading.Thread(target=self.meaning(word)))
-        th.append(threading.Thread(target=self.sentences(word)))
-        # 多线程，释义发音与例句同步进行，减少因动态网页获取而增加的等待时间
-        for t in th:
-            t.start()
-        for t in th:
-            t.join()
+        # several parts.
+        self.meaning(word)
+        self.sentences(word)
+        self.urls(word)
+        self.sound(word)
         print('\033[0m', end='')
+        # close connect.
         self.conn.commit()
         self.conn.close()
 
@@ -275,16 +279,13 @@ class Jscb:
         if self.fromfile:
             self.getall_fromfile()
             sys.exit(0)
-        while (1):
+        while True:
             word = self.prepare()
-            th = []
-            th.append(threading.Thread(target=self.meaning(word)))
-            th.append(threading.Thread(target=self.sentences(word)))
-            # 多线程，释义发音与例句同步进行，减少因动态网页获取而增加的等待时间
-            for t in th:
-                t.start()
-            for t in th:
-                t.join()
+            # several parts.
+            self.meaning(word)
+            self.sentences(word)
+            self.urls(word)
+            self.sound(word)
             self.next_or_stop()
 
     def translate_from_jscb(self, word, results_static=None):

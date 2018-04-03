@@ -185,7 +185,7 @@ class Review:
         elif s == 's':
             """play sound again"""
             if not self.nosound:
-                play_mp3(self.path, word, show_tag=not self.dictation)
+                play_mp3(self.path, word, show_tag=False)
                 self.next(word)
         elif s == 'n':
             try:
@@ -245,11 +245,7 @@ class Review:
             print("  {:<}".format(l))
         print('\033[0m')
 
-        # 是否播放音频
-        if not self.nosound:
-            play_mp3(self.path, word, show_tag=not self.dictation)
-
-        temp = "123"
+        temp = "lovezn"
         if self.dictation:
             try_t = 2
             while temp != word and try_t != 0:
@@ -263,17 +259,24 @@ class Review:
             print()
         if temp == word:
             print("~~~~ {:s} ~~~~\n".format("well done!"))
-        elif temp == "123":
+        elif temp == "lovezn":
             pass
         else:
             print("-->> {:s} <<--\n".format(word))
-
+        # print sentences.
         if self.sentence:
             if sentences == []:
                 print('[*] cannot find sentence file of this word.')
             else:
                 print(sentences)
             print()
+        # print other dictionary urls.
+        if self.url:
+            other_dic_urls(word)
+        # play sound.
+        if not self.nosound:
+            play_mp3(self.path, word, show_tag=False)
+
 
     def review(self):
         """复习单词主函数"""
@@ -321,9 +324,6 @@ class Review:
                     os.system(order_logo_review)
                 self.print_thing(idx, word)
                 # 可执行发音，删除等命令
-                if self.url:
-                    # print other dictionary urls.
-                    other_dic_urls(word)
                 self.next(word)
             k += 1
         print("[+] reivew completed, You get it.")
