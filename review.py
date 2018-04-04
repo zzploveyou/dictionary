@@ -20,54 +20,37 @@ from lib.pre import (audio_dir, byebye, database_dir, myformat, order_clear,
 
 def parse():
     parser = argparse.ArgumentParser(
-        description='''description: review words in database randomly,
-        author: Zhaopeng Zhang''')
+        description='description: review words in database randomly.')
     parser.add_argument(
-        '-m',
-        '--nosound',
-        action='store_true',
-        help='don\'t play audio if specified')
+        '-m', '--mute', action='store_true', help='mute mode if specified.')
     parser.add_argument(
-        '-g', '--logo', action='store_true', help=' show logo if specified')
-    parser.add_argument(
-        '-e', '--expert', action='store_true', help='expert mode if specified')
-    parser.add_argument(
-        '-s',
-        '--sentence',
-        action='store_true',
-        help='show sentences if specified')
-    parser.add_argument(
-        '-d',
-        '--database',
-        default='default',
-        type=str,
-        dest='database',
-        help='default database name is "default", \
-                        Review database in current dir if txt in database,\
-                        Review database in database_dir if not')
+        '-g', '--logo', action='store_true', help=' show logo if specified.')
     parser.add_argument(
         '-i', '--info', action='store_true', help='print database infomation.')
-    parser.add_argument(
-        '-n',
-        '--number',
-        default=1,
-        type=int,
-        dest='number',
-        help='review n words at once.')
+
     parser.add_argument(
         '-t',
         '--dictation',
         action='store_true',
         help='dictation mode if specified')
     parser.add_argument(
-        '-u',
-        '--url',
-        action='store_true',
-        help="print other dictionary urls.")
+        '--nourl',
+        action='store_false',
+        help="don't print other dictionary urls.")
+    parser.add_argument(
+        '-n', '--number', default=1, type=int, help='review n words at once.')
+    parser.add_argument(
+        '-d',
+        '--database',
+        default='default',
+        type=str,
+        help='default database name is "default", \
+                        Review database in current dir if txt in database name,\
+                        Review database in database_dir if not.')
     args = parser.parse_args()
     if 'SSH_CLIENT' in os.environ:
         """don't play sound via ssh"""
-        args.nosound = True
+        args.mute = True
     return args
 
 
@@ -78,10 +61,8 @@ class Review:
         """初始化"""
         args = parse()
         self.path = os.path.dirname(os.path.realpath(__file__))
-        self.nosound = args.nosound
+        self.mute = args.mute
         self.logo = args.logo
-        self.expert = args.expert
-        self.sentence = args.sentence
         if ".txt" not in args.database:
             self.database = os.path.join(self.path, database_dir,
                                          args.database + ".txt")
@@ -90,7 +71,7 @@ class Review:
         self.info = args.info
         self.number = args.number
         self.dictation = args.dictation
-        self.url = args.url
+        self.nourl = args.nourl
         self.dic = {}
         self.temp_len = 0
         self.num_words = 0
@@ -109,11 +90,7 @@ class Review:
         self.conn.commit()
         self.conn.close()
         try:
-            if self.expert:
-                input("\n")
-            else:
-                input("\nctrl+c to exit autoplay review, \
-                    enter to continue!")
+            input("\n")
         except RuntimeError:
             print()
             sys.exit(byebye)
@@ -170,13 +147,7 @@ class Review:
 
     def next(self, word):
         """输出结果后的操作, 可删除单词"""
-        if self.expert:
-            # expert mode only when you are familar with this script.
-            s = input()
-        else:
-            s = input(
-                "enter to continue, 'd' to delete, 's' to play sound again, \
-'q' to quit:")
+        s = input()
         if s == 'd':
             # 删除单词
             self.delete(self.database, word)
@@ -184,7 +155,7 @@ class Review:
             self.num_words -= 1
         elif s == 's':
             """play sound again"""
-            if not self.nosound:
+            if not self.mute:
                 play_mp3(self.path, word, show_tag=False)
                 self.next(word)
         elif s == 'n':
@@ -249,10 +220,7 @@ class Review:
         if self.dictation:
             try_t = 2
             while temp != word and try_t != 0:
-                if self.expert:
-                    temp = input()
-                else:
-                    temp = input("input word: ")
+                temp = input()
                 try_t -= 1
                 if temp.strip() == "":
                     try_t = 0
@@ -263,18 +231,16 @@ class Review:
             pass
         else:
             print("-->> {:s} <<--\n".format(word))
-        # print sentences.
-        if self.sentence:
-            if sentences == []:
-                print('[*] cannot find sentence file of this word.')
-            else:
-                print(sentences)
-            print()
+        if sentences == []:
+            print('[*] cannot find sentence file of this word.')
+        else:
+            print(sentences)
+        print()
         # print other dictionary urls.
-        if self.url:
+        if self.nourl:
             other_dic_urls(word)
         # play sound.
-        if not self.nosound:
+        if not self.mute:
             play_mp3(self.path, word, show_tag=False)
 
     def review(self):
@@ -299,8 +265,6 @@ class Review:
             ns, idxs, words = [], [], []
             if N != 1:
                 os.system(order_clear)
-                if not self.expert:
-                    print("\nHelp: input indexes split with space.\n")
                 for idx, word in enumerate(tmpkeys):
                     print("{}: {}".format(idx, word))
                 ns = input("\ninput:")

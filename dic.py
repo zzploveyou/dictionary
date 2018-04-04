@@ -20,41 +20,30 @@ from lib.pre import (audio_dir, byebye, database_dir, myformat, order_clear,
 
 def parse():
     parser = argparse.ArgumentParser(
-        description='description: translate words using jscb, \
-            author: Zhaopeng Zhang')
+        description='description: dictionary crawed from http://www.iciba.com')
     parser.add_argument(
-        '-m',
-        '--nosound',
+        '-g', '--logo', action='store_true', help='show logo if specified.')
+    parser.add_argument(
+        '-m', '--mute', action='store_true', help='mute mode if specified.')
+    parser.add_argument(
+        '-w', '--word', type=str, help='query word in shell directly.')
+    parser.add_argument('--db', type=str, help='specify sqlite db.')
+    parser.add_argument(
+        '--nourl',
         action='store_false',
-        help='don\'t play audio if specified')
-    parser.add_argument(
-        '-g', '--logo', action='store_true', help='show logo if specified')
-    parser.add_argument(
-        '-e', '--expert', action='store_true', help='expert mode if specified')
-    parser.add_argument(
-        '-s',
-        '--sentence',
-        action='store_true',
-        help='query sentences if specified')
-    parser.add_argument('-w', '--word', type=str, help='query word in shell')
+        help="don't print other dictionary urls.")
     parser.add_argument(
         '-d',
         '--database',
         default='default',
         type=str,
         help='default database name is "default", \
-                        Review database in current dir if txt in database,\
-                        Review database in database_dir if not')
-    parser.add_argument('--db', type=str, help='specify database name')
-    parser.add_argument(
-        '-u',
-        '--url',
-        action='store_true',
-        help="print other dictionary urls.")
+                        Review database in current dir if txt in database name,\
+                        Review database in database_dir if not.')
     args = parser.parse_args()
     if 'SSH_CLIENT' in os.environ:
         """don't play sound via ssh"""
-        args.nosound = False
+        args.mute = True
     return args
 
 
@@ -65,12 +54,10 @@ class Jscb:
         """初始化参数"""
         args = parse()
         self.path = os.path.dirname(os.path.realpath(__file__))
-        self.nosound = args.nosound
+        self.mute = args.mute
         self.logo = args.logo
-        self.expert = args.expert
-        self.sentence = args.sentence
         self.word = args.word
-        self.url = args.url
+        self.nourl = args.nourl
         if args.db is not None:
             self.db = os.path.join(self.path, database_dir, args.db)
         else:
@@ -112,12 +99,7 @@ class Jscb:
                     "[" + os.path.basename(os.path.splitext(self.notefile)[0])
                     + " - " + str(len(self.words_keys)) + " words]"))
             print("\033[32m", end=" ")
-            if self.expert:
-                word = input("\n").strip()
-            else:
-                word = input(
-                    "input word to translate('q' or enter to exit):\n\n"
-                ).strip()
+            word = input("\n").strip()
         except KeyboardInterrupt:
             print()
             sys.exit(byebye)
@@ -147,7 +129,7 @@ class Jscb:
 
     def sound(self, word):
         """play sound."""
-        if self.nosound == 1:
+        if self.mute is not True:
             play_mp3(
                 self.path,
                 word,
@@ -156,43 +138,39 @@ class Jscb:
 
     def sentences(self, word):
         """加入例句模块，尝试获取发音，重启获取功能"""
-        if self.sentence:
-            try_time = 2
-            success = 0
-            while try_time != 0:
-                query = self.sdb.query(word)
-                if query is not None:
-                    res_dic = query
-                else:
-                    if self.wdriver is None:
-                        self.wdriver = Webdriver()
-                    res_dic = get_sentence_from_source_page(
-                        self.wdriver.source_page(word), word)
-                    self.sdb.add(word, res_dic)
-                res = format_sentence(word, res_dic, lighten=True)
-                if res != "":
-                    print(res)
-                    success = 1
-                    break
-                else:
-                    # print "retry to get sentence of this words..."
-                    pass
-                try_time -= 1
-            if not success:
-                print("[*] cannot get sentences of this word.\033[0m")
+        try_time = 2
+        success = 0
+        while try_time != 0:
+            query = self.sdb.query(word)
+            if query is not None:
+                res_dic = query
+            else:
+                if self.wdriver is None:
+                    self.wdriver = Webdriver()
+                res_dic = get_sentence_from_source_page(
+                    self.wdriver.source_page(word), word)
+                self.sdb.add(word, res_dic)
+            res = format_sentence(word, res_dic, lighten=True)
+            if res != "":
+                print(res)
+                success = 1
+                break
+            else:
+                # print "retry to get sentence of this words..."
+                pass
+            try_time -= 1
+        if not success:
+            print("[*] cannot get sentences of this word.\033[0m")
 
     def urls(self, word):
         """print urls of other dic."""
-        if self.url:
+        if self.nourl:
             other_dic_urls(word)
 
     def next_or_stop(self):
         """查词结束控制"""
         try:
-            if self.expert:
-                input()
-            else:
-                input("\nctrl+c to stop translate, enter to continue!")
+            input()
         except KeyboardInterrupt:
             self.conn.commit()
             self.conn.close()
