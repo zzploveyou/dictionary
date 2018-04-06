@@ -1,8 +1,11 @@
-﻿# 安装
+﻿![example screenshot](example.png)
+
+# 安装
 >
 1. ```pip3 install -r requirements.txt```
-2. 需要firefox --headless及geckodriver的支持，如无，则修改lib/driver.py并运行lib/jscb.py通过测试也可。
+2. 需要firefox --headless及geckodriver的支持，如无(例如仅有chrome)，则修改lib/driver.py并运行lib/jscb.py通过测试也可。
 3. database/dic.db[下载地址](https://pan.baidu.com/s/1L1XwrMZxEuJ7HWOeASChfw)   **n841**
+4. 注意python3与utf-8编码问题，及ascii颜色码
 
 ---
 
