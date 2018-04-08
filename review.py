@@ -210,6 +210,8 @@ class Review:
         if not self.dictation:
             print(word)
         else:
+            if not self.mute:
+                play_mp3(self.path, word, show_tag=False)
             print("*" * len(word))
         # 释义
         for l in meanings.split("\n"):
@@ -240,7 +242,7 @@ class Review:
         if self.nourl:
             other_dic_urls(word)
         # play sound.
-        if not self.mute:
+        if not self.mute and not self.dictation:
             play_mp3(self.path, word, show_tag=False)
 
     def review(self):
