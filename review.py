@@ -164,11 +164,14 @@ class Review:
             except Exception:
                 sen = ""
             os.system('''notify-send "{}" "{}"'''.format(word, sen))
+        elif s == 'v':
+            other_dic_urls(word, verbose=True)
+            self.next(word)
         elif s in ['h', 'help']:
             print((
                 "-----------input choice -------------\n" + "{}\n" * 6).format(
                     "d: delete word from database.", "s: play sound again.",
-                    "n: add word to notify-send.", "h: help.", "q: exit.",
+                    "n: add word to notify-send.", "v: verbose dic urls.", "h: help.", "q: exit.",
                     "enter: next word."))
             print("input:", end="")
             self.next(word)
