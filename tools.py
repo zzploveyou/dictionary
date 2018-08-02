@@ -16,13 +16,14 @@ from urllib.error import HTTPError
 import sqlite3
 from glob import glob
 import os
+import csv
 import argparse
 import progressbar
 from time import sleep
 from lib.pre import audio_dir, database_dir
 from lib.parser import parse_dic
 from lib.jscb import get_meaning
-from lib.sqlite import MeanSqlite
+from lib.sqlite import MeanSqlite, SenSqlite
 
 PATH = os.path.dirname(__file__)
 DATABASE = os.path.join(PATH, database_dir, "dic.db")
@@ -31,6 +32,7 @@ DATABASE = os.path.join(PATH, database_dir, "dic.db")
 def get_meanings_from_file(database, filename, tofile):
     conn = sqlite3.connect(database)
     mdb = MeanSqlite(conn)
+    sdb = SenSqlite(conn)
     # read words list
     words_list = set()
     dic = parse_dic(filename)
@@ -43,6 +45,8 @@ def get_meanings_from_file(database, filename, tofile):
     # write to tofile.
     bar = progressbar.ProgressBar()
     fw = open(tofile, 'a')
+    gw = open(tofile + ".sen.csv", 'a')
+    writer = csv.writer(gw)
     for word in bar(words_list):
         results_static = get_meaning(word, mdb)[0]
         meanings = [i for i in results_static if not i.startswith("http:")]
@@ -52,8 +56,17 @@ def get_meanings_from_file(database, filename, tofile):
             for idx in range(len(meanings) - 1):
                 fw.write("├── {}\n".format(meanings[idx]))
             fw.write("└── {}\n".format(meanings[-1]))
+        sdic = sdb.query(word)
+        sen_ens = sdic['sen_ens']
+        col_ens = sdic['col_ens']
+        if col_ens != []:
+            writer.writerow([word, "/".join(col_ens)])
+        else:
+            writer.writerow([word, "/".join(sen_ens)])
     conn.commit()
     conn.close()
+    fw.close()
+    gw.close()
 
 
 def deletenull():
@@ -212,7 +225,9 @@ if __name__ == '__main__':
         "-i",
         "--input",
         dest="inputfile",
-        help="input text file, each line is a word.")
+        help=
+        "input text file, each line is a word(or format as database/default.txt)."
+    )
     group3.add_argument(
         "-o",
         "--output",
