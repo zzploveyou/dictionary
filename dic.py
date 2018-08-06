@@ -7,6 +7,7 @@ import os
 import sys
 from urllib.request import urlretrieve
 import sqlite3
+import socket
 
 from lib.sqlite import MeanSqlite, SenSqlite
 from lib.parser import parse_dic
@@ -16,6 +17,9 @@ from lib.driver import Webdriver
 from lib.play_wordmp3 import play_mp3
 from lib.pre import (audio_dir, byebye, database_dir, myformat, order_clear,
                      order_logo_dic, other_dic_urls)
+
+
+socket.setdefaulttimeout(30)
 
 
 def parse():
