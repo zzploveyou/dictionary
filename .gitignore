@@ -4,3 +4,4 @@
 *.pyc
 !/database/.nothing
 !/audio/.nothing
+__pycache__
