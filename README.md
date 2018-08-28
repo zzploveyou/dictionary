@@ -65,7 +65,7 @@ dic
 # 指定存入词库查询
 dic -d TOEFL/list01
 
-# 创建单词库的方法
+# 创建单词库的方法(版本更改后已失效)
 ls *.txt | parallel -j 4 "python3 dic.py -es -d {}.txt -f {} --db {}.db"
 ```
 
