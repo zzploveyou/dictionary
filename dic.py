@@ -42,8 +42,8 @@ def parse():
         default='default',
         type=str,
         help='default database name is "default", \
-                        Review database in current dir if txt in database name,\
-                        Review database in database_dir if not.')
+                        query word using database in current dir if txt in database name,\
+                        use database in database_dir if not.')
     args = parser.parse_args()
     if 'SSH_CLIENT' in os.environ:
         """don't play sound via ssh"""
