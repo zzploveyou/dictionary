@@ -166,15 +166,13 @@ class Jscb:
         if not success:
             print("[*] cannot get sentences of this word.\033[0m")
 
-    def urls(self, word):
-        """print urls of other dic."""
-        if self.nourl:
-            other_dic_urls(word)
-
-    def next_or_stop(self):
+    def next_or_stop(self, word):
         """查词结束控制"""
         try:
-            input()
+            choice = input()
+            if choice == "m":
+                other_dic_urls(word)
+                input()
         except KeyboardInterrupt:
             self.conn.commit()
             self.conn.close()
@@ -192,10 +190,10 @@ class Jscb:
         # several parts.
         self.meaning(word)
         self.sentences(word)
-        self.urls(word)
         self.sound(word)
         print('\033[0m', end='')
         # close connect.
+        self.next_or_stop(word)
         self.conn.commit()
         self.conn.close()
 
@@ -207,9 +205,8 @@ class Jscb:
             # several parts.
             self.meaning(word)
             self.sentences(word)
-            self.urls(word)
             self.sound(word)
-            self.next_or_stop()
+            self.next_or_stop(word)
 
     def retrieve_meaning(self, word, results_static=None):
         """获取单词在金山词霸上的释义，并格式化输出到屏幕，词库"""

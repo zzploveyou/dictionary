@@ -165,13 +165,15 @@ class Review:
                 sen = ""
             os.system('''notify-send "{}" "{}"'''.format(word, sen))
         elif s == 'v':
-            other_dic_urls(word, verbose=True)
             self.next(word)
+        elif s == 'm':
+            other_dic_urls(word)
+            input()
         elif s in ['h', 'help']:
             print((
                 "-----------input choice -------------\n" + "{}\n" * 6).format(
                     "d: delete word from database.", "s: play sound again.",
-                    "n: add word to notify-send.", "v: verbose dic urls.", "h: help.", "q: exit.",
+                    "n: add word to notify-send.", "m: more dic urls.", "h: help.", "q: exit.",
                     "enter: next word."))
             print("input:", end="")
             self.next(word)
@@ -241,9 +243,6 @@ class Review:
         else:
             print(sentences)
         print()
-        # print other dictionary urls.
-        if self.nourl:
-            other_dic_urls(word)
         # play sound.
         if not self.mute and not self.dictation:
             play_mp3(self.path, word, show_tag=False)
