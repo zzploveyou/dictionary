@@ -24,7 +24,8 @@ class Webdriver(object):
         options = Options()
         options.add_argument("--headless")
         options.add_argument("--safe-mode")
-        # maybe you need upgrade your geckodriver to version 2.0
+        # maybe you need upgrade your geckodriver according to FireFox version.
+        # https://github.com/mozilla/geckodriver/releases/download/
         self.driver = webdriver.Firefox(
             firefox_profile=firefoxProfile,
             firefox_options=options,
@@ -58,4 +59,5 @@ class Webdriver(object):
 
 if __name__ == "__main__":
     wd = Webdriver()
+    print(wd.source_page("hello"))
     wd.quit()
