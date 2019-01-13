@@ -57,12 +57,15 @@ def get_meanings_from_file(database, filename, tofile):
                 fw.write("├── {}\n".format(meanings[idx]))
             fw.write("└── {}\n".format(meanings[-1]))
         sdic = sdb.query(word)
-        sen_ens = sdic['sen_ens']
-        col_ens = sdic['col_ens']
-        if col_ens != []:
-            writer.writerow([word, "/".join(col_ens)])
-        else:
-            writer.writerow([word, "/".join(sen_ens)])
+        if sdic is None:
+            writer.writerow([word])
+        else: 
+            sen_ens = sdic['sen_ens']
+            col_ens = sdic['col_ens']
+            if col_ens != []:
+                writer.writerow([word, "/".join(col_ens)])
+            else:
+                writer.writerow([word, "/".join(sen_ens)])
     conn.commit()
     conn.close()
     fw.close()
