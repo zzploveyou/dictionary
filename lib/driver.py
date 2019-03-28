@@ -28,9 +28,8 @@ class Webdriver(object):
         # https://github.com/mozilla/geckodriver/releases/download/
         self.driver = webdriver.Firefox(
             firefox_profile=firefoxProfile,
-            firefox_options=options,
-            executable_path="/usr/bin/geckodriver",
-            log_path=os.path.join(
+            options=options,
+            service_log_path=os.path.join(
                 os.path.dirname(os.path.realpath(__file__)), "sentence.log"))
         # set page load timeout, script will slower when the number is larger
         self.driver.set_page_load_timeout(3)

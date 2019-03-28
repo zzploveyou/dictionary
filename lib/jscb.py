@@ -73,7 +73,7 @@ def get_from_jscb(word):
 
 def light(word, sentence):
     """高亮例句中的单词"""
-    cformat = "\033[4;94m{}\033[0m"
+    cformat = "{}"
     patterns = [
         word + "s", word + "es", word[:-1] + "ies", word[:-1] + "ves",
         word + "ed", word[:-1] + "ied", word[:-1] + "ed", word + "ing",

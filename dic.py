@@ -102,7 +102,7 @@ class Jscb:
                 myformat.format(
                     "[" + os.path.basename(os.path.splitext(self.notefile)[0])
                     + " - " + str(len(self.words_keys)) + " words]"))
-            print("\033[32m", end=" ")
+            print("", end=" ")
             word = input("\n").strip()
         except KeyboardInterrupt:
             print()
@@ -129,7 +129,7 @@ class Jscb:
         else:
             for l in self.dic[word].split("\n"):
                 print("  {:<}".format(l))
-            print('\033[0m')
+            print('')
 
     def sound(self, word):
         """play sound."""
@@ -164,7 +164,7 @@ class Jscb:
                 pass
             try_time -= 1
         if not success:
-            print("[*] cannot get sentences of this word.\033[0m")
+            print("[*] cannot get sentences of this word.")
 
     def next_or_stop(self, word):
         """查词结束控制"""
@@ -180,10 +180,10 @@ class Jscb:
 
     def quick_dic(self):
         """命令行快速查词"""
-        print('\033[0m', end=' ')
+        print('', end=' ')
         self.get_words_already()
         word = self.word
-        print('\033[32m', end=' ')
+        print('', end=' ')
         print("\n{:s}".format(word))
         if word in self.words_already:
             print("[existed]")
@@ -191,7 +191,7 @@ class Jscb:
         self.meaning(word)
         self.sentences(word)
         self.sound(word)
-        print('\033[0m', end='')
+        print('', end='')
         # close connect.
         self.next_or_stop(word)
         self.conn.commit()
@@ -237,9 +237,9 @@ class Jscb:
             except Exception as e:
                 print(e)
         print(res)
-        print("\033[0m")
+        print("")
         if word not in self.words_already and meanings != []:
-            with open(self.notefile, 'a') as f:
+            with open(self.notefile, 'a', encoding="utf-8") as f:
                 f.write("#" * 45 + "\n")
                 f.write("#" + word + "\n")
                 f.write(res)

@@ -211,7 +211,7 @@ class Review:
         print(myformat.format(head))
         # 单词
         print()
-        print('\033[32m', end=' ')
+        print('', end=' ')
         if not self.dictation:
             print(word)
         else:
@@ -221,7 +221,7 @@ class Review:
         # 释义
         for l in meanings.split("\n"):
             print("  {:<}".format(l))
-        print('\033[0m')
+        print('')
 
         temp = "lovezn"
         if self.dictation:

@@ -27,7 +27,7 @@ URLs = (("Thesaurus", "https://www.freethesaurus.com/",
 def url(url, word, rep):
     "return dic url(replace space with `rep`"
     url += word.replace(" ", rep)
-    return "\033[36m {}\033[0m".format(url)
+    return "{}".format(url)
 
 
 def other_dic_urls(word):
