@@ -6,7 +6,7 @@ byebye = "\n^-^ byebye~~\n"
 audio_dir = "audio"
 database_dir = "database"
 
-order_clear = "clear"
+order_clear = "cls"
 order_logo_dic = " ".join(["figlet", "Dic for God"])
 order_logo_review = " ".join(["figlet", "Review for God"])
 

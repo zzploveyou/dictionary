@@ -1,6 +1,6 @@
 """
 author: zzp
-usage : quick dictionary in ubuntu.
+usage : quick dictionary in windows 10.
 """
 import argparse
 import os
@@ -18,7 +18,9 @@ from lib.play_wordmp3 import play_mp3
 from lib.pre import (audio_dir, byebye, database_dir, myformat, order_clear,
                      order_logo_dic, other_dic_urls)
 
-
+from termcolor import colored
+from colorama import init
+init()
 socket.setdefaulttimeout(30)
 
 
@@ -86,7 +88,7 @@ class Jscb:
     def get_words_already(self):
         """获取词库中已有单词信息"""
         if (os.path.exists(self.notefile)):
-            for line in open(self.notefile):
+            for line in open(self.notefile, encoding="utf-8"):
                 if line.count('#') == 1 and line[0] == '#':
                     self.words_already.append(line.strip()[1:])
             self.dic = parse_dic(self.notefile)
@@ -98,10 +100,10 @@ class Jscb:
         if (self.logo):
             os.system(order_logo_dic)
         try:
-            print(
+            print(colored(
                 myformat.format(
                     "[" + os.path.basename(os.path.splitext(self.notefile)[0])
-                    + " - " + str(len(self.words_keys)) + " words]"))
+                    + " - " + str(len(self.words_keys)) + " words]"), "red"))
             print("", end=" ")
             word = input("\n").strip()
         except KeyboardInterrupt:
@@ -114,7 +116,7 @@ class Jscb:
         if (word not in self.words_keys):
             self.words_keys.append(word)
         else:
-            print("[existed]")
+            print(colored("[existed]", 'green'))
         return word
 
     def meaning(self, word):
@@ -128,7 +130,7 @@ class Jscb:
                 sys.exit(byebye)
         else:
             for l in self.dic[word].split("\n"):
-                print("  {:<}".format(l))
+                print(colored("  {:<}".format(l), 'green'))
             print('')
 
     def sound(self, word):
@@ -156,7 +158,7 @@ class Jscb:
                 self.sdb.add(word, res_dic)
             res = format_sentence(word, res_dic, lighten=True)
             if res != "":
-                print(res)
+                print(colored(res, "white"))
                 success = 1
                 break
             else:
@@ -184,9 +186,9 @@ class Jscb:
         self.get_words_already()
         word = self.word
         print('', end=' ')
-        print("\n{:s}".format(word))
+        print(colored("\n{:s}".format(word), "yellow"))
         if word in self.words_already:
-            print("[existed]")
+            print(colored("[existed]", "green"))
         # several parts.
         self.meaning(word)
         self.sentences(word)
@@ -216,7 +218,7 @@ class Jscb:
             results_static, tag_in = get_meaning(word, self.mdb)
         if tag_in is True:
             """Already in local db."""
-            print("[Local]")
+            print(colored("[Local]", "green"))
         fayin, meanings = [], []
         if results_static != []:
             for item in results_static:
@@ -229,14 +231,14 @@ class Jscb:
             for idx in range(len(meanings) - 1):
                 res += "  ├── {}\n".format(meanings[idx])
             res += "  └── {}\n".format(meanings[-1])
-        for tag, url in zip(["英", "美"], fayin):
+        for tag, url in zip(["en", "us"], fayin):
             try:
                 urlretrieve(url,
                             os.path.join(self.path, audio_dir,
                                          "{}-{}.mp3".format(word, tag)))
             except Exception as e:
                 print(e)
-        print(res)
+        print(colored(res, "green"))
         print("")
         if word not in self.words_already and meanings != []:
             with open(self.notefile, 'a', encoding="utf-8") as f:

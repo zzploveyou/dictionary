@@ -7,7 +7,7 @@ def parse_dic(filename):
     """获取单词对应文本库中内容, 返回一个单词到释义的映射"""
     dic = {}
     if os.path.exists(filename):
-        content = open(filename).read()
+        content = open(filename, encoding="utf-8").read()
         # regex extract.
         for res in re.findall("#([^#]+?)\n([\s\S]*?)#|#([^#]+?)\n([\s\S]*)",
                               content):

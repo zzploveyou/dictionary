@@ -14,7 +14,7 @@ def play_mp3(path, word, show_tag=True, only_American_pronunciation=True):
         return
     filenames = []
     if only_American_pronunciation:
-        for filename in glob(os.path.join(path, audio_dir, word + "-美.mp3")):
+        for filename in glob(os.path.join(path, audio_dir, word + "-us.mp3")):
             filenames.append(filename)
     else:
         for filename in glob(os.path.join(path, audio_dir, word + "-*.mp3")):
