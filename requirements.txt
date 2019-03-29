@@ -1,4 +1,1 @@
-bs4
 playsound
-selenium
-lxml

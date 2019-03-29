@@ -15,7 +15,10 @@ except Exception as e:
 def play_audio(urls):
     """play audio mp3."""
     for url in urls:
-        playsound(url)
+        try:
+            playsound(url)
+        except:
+            print("Maybe network broken.")
 
 
 def format_meaning(word, mean):
@@ -42,8 +45,11 @@ def format_sentence(word, res_dic):
 
 
 def query(cursor, word):
-    mean = cursor.execute("select * from MEANING where word=?",
-                          (word, )).fetchone()[1]
+    try:
+        mean = cursor.execute("select * from MEANING where word=?",
+                            (word, )).fetchone()[1]
+    except TypeError:
+        sys.exit("Not in database.")
     sen_ens, sen_cns, col_ens, col_cns = cursor.execute(
         "select * from SENTENCE where word=?", (word, )).fetchone()[1:]
     res_dic = {}
